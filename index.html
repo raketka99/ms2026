@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Statistiky MS ve fotbale 2026</title>
+<style>
+  /* ====== Inspirováno vizuální identitou MS 2026 ======
+     Paleta vychází z odstínů hostitelských zemí (USA, Kanada, Mexiko)
+     a oficiálního brandingu turnaje: hluboká modrá, sytá červená,
+     zelená a teplé akcenty. */
+  :root {
+    --wc-navy: #0b1f4d;
+    --wc-navy-dark: #06143a;
+    --wc-red: #e4002b;
+    --wc-green: #00813e;
+    --wc-gold: #f5b800;
+    --wc-cream: #fff8ed;
+    --wc-bg: #f4f1ea;
+    --wc-surface: #ffffff;
+    --wc-text: #0b1f4d;
+    --wc-muted: #5b6478;
+    --wc-border: #e6e1d5;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--wc-bg); }
+  body {
+    font-family: "Helvetica Neue", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--wc-text);
+    line-height: 1.5;
+    padding-top: 84px;
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(228,0,43,0.06), transparent 40%),
+      radial-gradient(circle at 90% 10%, rgba(0,129,62,0.06), transparent 40%),
+      radial-gradient(circle at 50% 100%, rgba(11,31,77,0.05), transparent 50%);
+  }
+
+  /* ====== Fixní horní lišta ====== */
+  .topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 84px;
+    background: linear-gradient(90deg, var(--wc-navy-dark) 0%, var(--wc-navy) 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+    box-shadow: 0 4px 18px rgba(6,20,58,0.25);
+    z-index: 100;
+    border-bottom: 3px solid var(--wc-gold);
+  }
+  /* Barevný pruh hostitelských zemí pod lištou */
+  .topbar::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: -3px;
+    height: 3px;
+    background: linear-gradient(
+      90deg,
+      var(--wc-red) 0%, var(--wc-red) 33.3%,
+      #ffffff 33.3%, #ffffff 66.6%,
+      var(--wc-green) 66.6%, var(--wc-green) 100%
+    );
+  }
+
+  /* === Slot pro oficiální logo MS 2026 ===
+     Sem si vložte vlastní obrázek loga (např. <img src="logo.png">).
+     Doporučená výška ~ 60 px, průhledné pozadí (PNG/SVG). */
+  .logo-slot {
+    width: 64px;
+    height: 64px;
+    margin-right: 18px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.08);
+    border: 1px dashed rgba(255,255,255,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .logo-slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .logo-slot .placeholder {
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.55);
+    text-align: center;
+    line-height: 1.1;
+    padding: 4px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .topbar-text { display: flex; flex-direction: column; }
+  .topbar h1 {
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  .topbar .sub {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.7);
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .topbar .hosts {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .topbar .hosts .chip {
+    background: rgba(255,255,255,0.1);
+    padding: 6px 12px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  /* ====== Hero pruh ====== */
+  .hero {
+    background: linear-gradient(135deg, var(--wc-navy) 0%, #14306b 60%, var(--wc-red) 140%);
+    color: white;
+    padding: 36px 28px;
+    border-radius: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(245,184,0,0.2), transparent 35%),
+      radial-gradient(circle at 80% 70%, rgba(0,129,62,0.25), transparent 40%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .hero .eyebrow {
+    display: inline-block;
+    background: var(--wc-gold);
+    color: var(--wc-navy-dark);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-size: 0.7rem;
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+  }
+  .hero h2 {
+    font-size: 1.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.15;
+  }
+  .hero p {
+    margin-top: 10px;
+    max-width: 680px;
+    color: rgba(255,255,255,0.85);
+    font-size: 0.98rem;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+
+  /* ====== Záložky ====== */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    background: var(--wc-surface);
+    border: 2px solid var(--wc-border);
+    color: var(--wc-text);
+    padding: 10px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.92rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tab .icon { font-size: 1rem; }
+  .tab:hover { border-color: var(--wc-navy); transform: translateY(-1px); }
+  .tab.active {
+    background: var(--wc-navy);
+    color: white;
+    border-color: var(--wc-navy);
+    box-shadow: 0 4px 14px rgba(11,31,77,0.3);
+  }
+  .tab.active.cat-reds { background: var(--wc-red); border-color: var(--wc-red); box-shadow: 0 4px 14px rgba(228,0,43,0.35); }
+  .tab.active.cat-clean { background: var(--wc-green); border-color: var(--wc-green); box-shadow: 0 4px 14px rgba(0,129,62,0.35); }
+  .tab.active.cat-assists { background: var(--wc-gold); color: var(--wc-navy-dark); border-color: var(--wc-gold); }
+
+  /* ====== Filtry ====== */
+  .filters {
+    background: var(--wc-surface);
+    padding: 18px;
+    border-radius: 14px;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    border: 1px solid var(--wc-border);
+    box-shadow: 0 1px 2px rgba(11,31,77,0.04);
+  }
+  .filters label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.72rem;
+    color: var(--wc-muted);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    flex: 1;
+    min-width: 200px;
+  }
+  .filters select, .filters input {
+    margin-top: 6px;
+    padding: 11px 14px;
+    border: 2px solid var(--wc-border);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    background: white;
+    color: var(--wc-text);
+    font-weight: 500;
+    font-family: inherit;
+  }
+  .filters select:focus, .filters input:focus {
+    outline: none;
+    border-color: var(--wc-navy);
+    box-shadow: 0 0 0 4px rgba(11,31,77,0.1);
+  }
+
+  /* ====== Tabulka ====== */
+  .table-wrap {
+    background: var(--wc-surface);
+    border-radius: 14px;
+    overflow: auto;
+    border: 1px solid var(--wc-border);
+    box-shadow: 0 4px 16px rgba(11,31,77,0.06);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.93rem;
+    min-width: 860px;
+  }
+  thead {
+    background: linear-gradient(180deg, var(--wc-navy) 0%, var(--wc-navy-dark) 100%);
+    color: white;
+    position: relative;
+  }
+  thead::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--wc-red), var(--wc-gold), var(--wc-green));
+  }
+  th {
+    text-align: left;
+    padding: 14px 14px;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  th:hover { background: rgba(255,255,255,0.07); }
+  th .arrow { opacity: 0.4; margin-left: 4px; font-size: 0.7rem; }
+  th.sorted .arrow { opacity: 1; color: var(--wc-gold); }
+  tbody tr {
+    border-bottom: 1px solid var(--wc-border);
+    transition: background 0.1s;
+  }
+  tbody tr:hover { background: var(--wc-cream); }
+  tbody tr:last-child { border-bottom: none; }
+  td {
+    padding: 12px 14px;
+    white-space: nowrap;
+  }
+  td.rank {
+    font-weight: 800;
+    color: var(--wc-navy);
+    text-align: center;
+    width: 64px;
+    font-size: 1rem;
+  }
+  tbody tr:nth-child(1) td.rank { color: var(--wc-gold); }
+  tbody tr:nth-child(2) td.rank { color: #b8b8b8; }
+  tbody tr:nth-child(3) td.rank { color: #c08a4a; }
+  td.player-name { font-weight: 600; }
+  td .team { display: inline-flex; align-items: center; gap: 8px; }
+  .flag { font-size: 1.25rem; }
+  .pos-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #eef2f9;
+    color: var(--wc-navy);
+  }
+  .pos-badge.pos-utocnik { background: #ffe7ec; color: var(--wc-red); }
+  .pos-badge.pos-zaloznik { background: #fff4d1; color: #a37a00; }
+  .pos-badge.pos-obrance { background: #e0f1e7; color: var(--wc-green); }
+  .pos-badge.pos-brankar { background: #e5e9f5; color: var(--wc-navy); }
+  td.stat-highlight {
+    font-weight: 800;
+    color: var(--wc-navy);
+  }
+  .empty {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--wc-muted);
+    font-style: italic;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 30px;
+    color: var(--wc-muted);
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+  }
+
+  @media (max-width: 700px) {
+    body { padding-top: 76px; }
+    .topbar { height: 76px; padding: 0 16px; }
+    .topbar h1 { font-size: 1rem; }
+    .topbar .sub { font-size: 0.65rem; letter-spacing: 1px; }
+    .topbar .hosts { display: none; }
+    .logo-slot { width: 52px; height: 52px; margin-right: 12px; }
+    .hero { padding: 26px 18px; }
+    .hero h2 { font-size: 1.35rem; }
+    .container { padding: 18px 12px 40px; }
+    .filters label { min-width: 100%; }
+    .tab { padding: 8px 14px; font-size: 0.82rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <!--
+    ====== SEM VLOŽTE OFICIÁLNÍ LOGO MS 2026 ======
+    Stačí nahradit prvek .placeholder vlastním <img>, např.:
+      <img src="logo-fifa-wc-2026.png" alt="FIFA World Cup 2026" />
+    Doporučujeme PNG/SVG s průhledným pozadím.
+  -->
+  <div class="logo-slot" id="logoSlot" aria-label="Místo pro logo MS 2026">
+    <img src="logo.webp" alt="Logo MS 2026">
+  </div>
+
+  <div class="topbar-text">
+    <h1>Statistiky MS ve fotbale 2026</h1>
+    <span class="sub">FIFA World Cup · 48 týmů · 104 zápasů</span>
+  </div>
+
+  <div class="hosts">
+    <span class="chip">🇺🇸 USA</span>
+    <span class="chip">🇨🇦 Kanada</span>
+    <span class="chip">🇲🇽 Mexiko</span>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow">Oficiální turnajové statistiky</span>
+    <h2>Nejlepší hráči turnaje pod jednou střechou</h2>
+    <p>
+      Stránka přináší kompletní individuální statistiky z Mistrovství světa ve fotbale 2026,
+      které poprvé v historii hostí tři země — Spojené státy, Kanada a Mexiko.
+      Procházejte žebříčky střelců, asistentů, brankářů s čistým kontem i nejtrestanějších
+      hráčů, filtrujte podle týmu nebo jména a řaďte tabulku kliknutím na záhlaví.
+    </p>
+  </div>
+</section>
+
+<main class="container">
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-cat="goals"><span class="icon">⚽</span>Střelci</button>
+    <button class="tab" data-cat="assists"><span class="icon">🅰️</span>Asistence</button>
+    <button class="tab" data-cat="clean"><span class="icon">🧤</span>Čistá konta</button>
+    <button class="tab" data-cat="reds"><span class="icon">🟥</span>Červené karty</button>
+  </div>
+
+  <div class="filters">
+    <label>Tým
+      <select id="teamFilter"></select>
+    </label>
+    <label>Hledat hráče
+      <input type="text" id="searchInput" placeholder="Zadejte jméno hráče..." />
+    </label>
+  </div>
+
+  <div class="table-wrap">
+    <table id="statsTable">
+      <thead>
+        <tr id="headerRow">
+          <th data-key="rank">Pořadí<span class="arrow">↕</span></th>
+          <th data-key="name">Jméno hráče<span class="arrow">↕</span></th>
+          <th data-key="team">Tým<span class="arrow">↕</span></th>
+          <th data-key="position">Pozice<span class="arrow">↕</span></th>
+          <th data-key="matches">Zápasy<span class="arrow">↕</span></th>
+          <th data-key="goals">Góly<span class="arrow">↕</span></th>
+          <th data-key="assists">Asistence<span class="arrow">↕</span></th>
+          <th data-key="clean">Čistá konta<span class="arrow">↕</span></th>
+          <th data-key="reds">Červené karty<span class="arrow">↕</span></th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    Ukázková data · Vizuální styl inspirovaný brandingem FIFA World Cup 2026
+  </footer>
+</main>
+
+<script>
+const TEAMS = [
+  {n:"Kanada",f:"🇨🇦"},{n:"Mexiko",f:"🇲🇽"},{n:"USA",f:"🇺🇸"},
+  {n:"Austrálie",f:"🇦🇺"},{n:"Irák",f:"🇮🇶"},{n:"Írán",f:"🇮🇷"},{n:"Japonsko",f:"🇯🇵"},
+  {n:"Jordánsko",f:"🇯🇴"},{n:"Jižní Korea",f:"🇰🇷"},{n:"Katar",f:"🇶🇦"},
+  {n:"Saúdská Arábie",f:"🇸🇦"},{n:"Uzbekistán",f:"🇺🇿"},
+  {n:"Alžírsko",f:"🇩🇿"},{n:"Kapverdy",f:"🇨🇻"},{n:"DR Kongo",f:"🇨🇩"},
+  {n:"Pobřeží slonoviny",f:"🇨🇮"},{n:"Egypt",f:"🇪🇬"},{n:"Ghana",f:"🇬🇭"},
+  {n:"Maroko",f:"🇲🇦"},{n:"Senegal",f:"🇸🇳"},
+  {n:"Jihoafrická republika",f:"🇿🇦"},{n:"Tunisko",f:"🇹🇳"},
+  {n:"Curaçao",f:"🇨🇼"},{n:"Haiti",f:"🇭🇹"},{n:"Panama",f:"🇵🇦"},
+  {n:"Argentina",f:"🇦🇷"},{n:"Brazílie",f:"🇧🇷"},{n:"Kolumbie",f:"🇨🇴"},
+  {n:"Ekvádor",f:"🇪🇨"},{n:"Paraguay",f:"🇵🇾"},{n:"Uruguay",f:"🇺🇾"},
+  {n:"Nový Zéland",f:"🇳🇿"},
+  {n:"Rakousko",f:"🇦🇹"},{n:"Belgie",f:"🇧🇪"},{n:"Bosna a Hercegovina",f:"🇧🇦"},
+  {n:"Chorvatsko",f:"🇭🇷"},{n:"Česko",f:"🇨🇿"},{n:"Anglie",f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},
+  {n:"Francie",f:"🇫🇷"},{n:"Německo",f:"🇩🇪"},{n:"Nizozemsko",f:"🇳🇱"},
+  {n:"Norsko",f:"🇳🇴"},{n:"Portugalsko",f:"🇵🇹"},{n:"Skotsko",f:"🏴󠁧󠁢󠁳󠁣󠁴󠁿"},
+  {n:"Španělsko",f:"🇪🇸"},{n:"Švédsko",f:"🇸🇪"},{n:"Švýcarsko",f:"🇨🇭"},
+  {n:"Turecko",f:"🇹🇷"}
+];
+const FLAG = Object.fromEntries(TEAMS.map(t=>[t.n,t.f]));
+
+const PLAYERS = [
+  {name:"Raul Jimenez",team:"Mexiko",position:"Útočník",matches:3,goals:2,assists:0,clean:0,reds:0},
+  {name:"Julian Quinones",team:"Mexiko",position:"Útočník",matches:3,goals:1,assists:0,clean:0,reds:0},
+  {name:"Alexis Vega",team:"Mexiko",position:"Útočník",matches:3,goals:1,assists:1,clean:0,reds:0},
+  {name:"Edson Alvarez",team:"Mexiko",position:"Záložník",matches:3,goals:0,assists:2,clean:0,reds:0},
+  {name:"Brian Gutierrez",team:"Mexiko",position:"Záložník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Mora Gilberto",team:"Mexiko",position:"Záložník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Hirving Lozano",team:"Mexiko",position:"Útočník",matches:2,goals:0,assists:1,clean:0,reds:0},
+
+  {name:"Patrik Schick",team:"Česko",position:"Útočník",matches:3,goals:2,assists:0,clean:0,reds:0},
+  {name:"Adam Hložek",team:"Česko",position:"Útočník",matches:4,goals:1,assists:1,clean:0,reds:0},
+  {name:"Vasil Kušej",team:"Česko",position:"Útočník",matches:1,goals:0,assists:1,clean:0,reds:0},
+  {name:"Pavel Šulc",team:"Česko",position:"Záložník",matches:4,goals:1,assists:1,clean:0,reds:0},
+  {name:"Adam Karabec",team:"Česko",position:"Záložník",matches:1,goals:2,assists:1,clean:0,reds:0},
+  {name:"Michal Sadílek",team:"Česko",position:"Záložník",matches:4,goals:1,assists:0,clean:0,reds:0},
+  {name:"Vladimír Darida",team:"Česko",position:"Záložník",matches:3,goals:1,assists:1,clean:0,reds:0},
+  {name:"Lukáš Provod",team:"Česko",position:"Záložník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Ladislav Krejčí",team:"Česko",position:"Obránce",matches:4,goals:0,assists:1,clean:0,reds:0},
+
+  {name:"Son Heung-Min",team:"Jižní Korea",position:"Útočník",matches:5,goals:3,assists:1,clean:0,reds:0},
+  {name:"Kim Min-Jae",team:"Jižní Korea",position:"Obránce",matches:5,goals:0,assists:1,clean:0,reds:0},
+  {name:"Lee Tae-Seok",team:"Jižní Korea",position:"Obránce",matches:5,goals:0,assists:1,clean:0,reds:0},
+  {name:"Lee Kang-In",team:"Jižní Korea",position:"Záložník",matches:5,goals:2,assists:1,clean:0,reds:0},
+  {name:"Lee Jae-Sung",team:"Jižní Korea",position:"Záložník",matches:5,goals:0,assists:1,clean:0,reds:0},
+  {name:"Seol Young-Woo",team:"Jižní Korea",position:"Obránce",matches:5,goals:1,assists:0,clean:0,reds:0},
+  {name:"Cho Gue-Sung",team:"Jižní Korea",position:"Útočník",matches:5,goals:2,assists:0,clean:0,reds:0},
+  {name:"Kim Seung-Gyu",team:"Jižní Korea",position:"Brankář",matches:5,goals:0,assists:0,clean:1,reds:0},
+
+  {name:"Gift Links",team:"Jihoafrická republika",position:"Útočník",matches:3,goals:1,assists:2,clean:0,reds:0},
+  {name:"Lyle Foster",team:"Jihoafrická republika",position:"Útočník",matches:3,goals:2,assists:0,clean:0,reds:0},
+  {name:"Neo Maema",team:"Jihoafrická republika",position:"Záložník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Bongokuhle Hlongwane",team:"Jihoafrická republika",position:"Útočník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Teboho Mokoena",team:"Jihoafrická republika",position:"Záložník",matches:3,goals:1,assists:0,clean:0,reds:0},
+
+  {name:"Tajon Buchanan",team:"Kanada",position:"Útočník",matches:4,goals:1,assists:1,clean:0,reds:0},
+  {name:"Jonathan David",team:"Kanada",position:"Útočník",matches:4,goals:5,assists:1,clean:0,reds:0},
+  {name:"Promise David",team:"Kanada",position:"Útočník",matches:4,goals:1,assists:0,clean:0,reds:0},
+  {name:"Marcelo Flores",team:"Kanada",position:"Útočník",matches:4,goals:0,assists:1,clean:0,reds:0},
+  {name:"Tajon Buchanan",team:"Kanada",position:"Útočník",matches:4,goals:0,assists:1,clean:0,reds:0},
+  {name:"Ismael Kóne",team:"Kanada",position:"Záložník",matches:4,goals:0,assists:3,clean:0,reds:0},
+  {name:"Alphonso Davies",team:"Kanada",position:"Obránce",matches:4,goals:1,assists:0,clean:0,reds:0},
+
+  {name:"Edin Džeko",team:"Bosna a Hercegovina",position:"Útočník",matches:5,goals:4,assists:0,clean:0,reds:0},
+  {name:"Amar Dedič",team:"Bosna a Hercegovina",position:"Obránce",matches:5,goals:0,assists:2,clean:0,reds:0},
+  {name:"Stjepan Radeljić",team:"Bosna a Hercegovina",position:"Obránce",matches:5,goals:1,assists:0,clean:0,reds:0},
+  {name:"Jusuf Gazibegović",team:"Bosna a Hercegovina",position:"Obránce",matches:5,goals:0,assists:2,clean:0,reds:0},
+  {name:"Sead Kolašinac",team:"Bosna a Hercegovina",position:"Obránce",matches:5,goals:0,assists:1,clean:0,reds:0},
+  {name:"Amir Hadžiahmetović",team:"Bosna a Hercegovina",position:"Záložník",matches:5,goals:1,assists:0,clean:0,reds:0},
+  {name:"Haris Hajradinović",team:"Bosna a Hercegovina",position:"Záložník",matches:5,goals:1,assists:2,clean:0,reds:0},
+  {name:"Rade Krunić",team:"Bosna a Hercegovina",position:"Záložník",matches:5,goals:0,assists:2,clean:0,reds:0},
+  {name:"Ermedin Demirović",team:"Bosna a Hercegovina",position:"Útočník",matches:5,goals:3,assists:1,clean:0,reds:0},
+  {name:"Nikola Vasilj",team:"Bosna a Hercegovina",position:"Brankář",matches:5,goals:0,assists:0,clean:2,reds:0},
+
+  {name:"Christian Pulisic",team:"USA",position:"Útočník",matches:5,goals:5,assists:0,clean:0,reds:0},
+  {name:"Haji Wright",team:"USA",position:"Útočník",matches:5,goals:1,assists:2,clean:0,reds:0},
+  {name:"Cole Campbell",team:"USA",position:"Útočník",matches:5,goals:0,assists:1,clean:0,reds:0},
+  {name:"Weston McKennie",team:"USA",position:"Záložník",matches:5,goals:1,assists:0,clean:0,reds:0},
+  {name:"Chris Richards",team:"USA",position:"Obránce",matches:5,goals:1,assists:0,clean:0,reds:0},
+  {name:"Tanner Tessmann",team:"USA",position:"Záložník",matches:5,goals:0,assists:2,clean:0,reds:0},
+  {name:"Malik Tillman",team:"USA",position:"Záložník",matches:5,goals:1,assists:2,clean:0,reds:0},
+  {name:"Johnny Cardoso",team:"USA",position:"Záložník",matches:5,goals:0,assists:1,clean:0,reds:0},
+  {name:"Folarin Balogun",team:"USA",position:"Útočník",matches:5,goals:1,assists:1,clean:0,reds:0},
+  {name:"Patrick Schulte",team:"USA",position:"Brankář",matches:5,goals:0,assists:0,clean:1,reds:0},
+
+  {name:"Uğurcan Çakır",team:"Turecko",position:"Brankář",matches:1,goals:0,assists:0,clean:1,reds:0},
+  {name:"Hakan Calhanoglu",team:"Turecko",position:"Záložník",matches:3,goals:1,assists:1,clean:0,reds:0},
+  {name:"Orkun Kokcu",team:"Turecko",position:"Záložník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Arda Guler",team:"Turecko",position:"Útočník",matches:3,goals:2,assists:0,clean:0,reds:0},
+  {name:"Kenan Yildiz",team:"Turecko",position:"Útočník",matches:3,goals:0,assists:2,clean:0,reds:0},
+  {name:"Deniz Gul",team:"Turecko",position:"Útočník",matches:1,goals:1,assists:0,clean:0,reds:0},
+
+  {name:"Miguel Almirón",team:"Paraguay",position:"Útočník",matches:3,goals:2,assists:0,clean:0,reds:0},
+  {name:"Mauricio",team:"Paraguay",position:"Záložník",matches:3,goals:0,assists:1,clean:0,reds:0},
+
+  {name:"Mathew Ryan",team:"Austrálie",position:"Brankář",matches:4,goals:0,assists:0,clean:2,reds:0},
+  {name:"Nestory Irankunda",team:"Austrálie",position:"Útočník",matches:4,goals:2,assists:0,clean:1,reds:0},
+  {name:"Jordan Bos",team:"Austrálie",position:"Obránce",matches:4,goals:0,assists:2,clean:1,reds:0},
+
+  {name:"Xherdan Shaqiri",team:"Švýcarsko",position:"Záložník",matches:3,goals:1,assists:0,clean:0,reds:0},
+  {name:"Ruben Vargas",team:"Švýcarsko",position:"Záložník",matches:2,goals:2,assists:0,clean:0,reds:0},
+  {name:"Johan Manzambi",team:"Švýcarsko",position:"Záložník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Breel Embolo",team:"Švýcarsko",position:"Útočník",matches:1,goals:1,assists:0,clean:0,reds:0},
+  {name:"Zeki Amdouni",team:"Švýcarsko",position:"Útočník",matches:3,goals:3,assists:0,clean:0,reds:0},
+  {name:"Nico Elvedi",team:"Švýcarsko",position:"Obránce",matches:4,goals:0,assists:1,clean:0,reds:0},
+  {name:"Dan Ndoye",team:"Švýcarsko",position:"Útočník",matches:5,goals:1,assists:2,clean:0,reds:0},
+  {name:"Granit Xhaka",team:"Švýcarsko",position:"Záložník",matches:5,goals:1,assists:5,clean:0,reds:0},
+  {name:"Manuel Akanji",team:"Švýcarsko",position:"Obránce",matches:5,goals:0,assists:1,clean:0,reds:0},
+
+  {name:"Akram Afif",team:"Katar",position:"Útočník",matches:3,goals:1,assists:1,clean:0,reds:0},
+  {name:"Ahmed Al-Ganehi",team:"Katar",position:"Útočník",matches:3,goals:1,assists:0,clean:0,reds:0},
+  {name:"Yusuf Abdurisag",team:"Katar",position:"Útočník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Mohammed Waad",team:"Katar",position:"Záložník",matches:3,goals:1,assists:0,clean:0,reds:0},
+  {name:"Assim Madibo",team:"Katar",position:"Záložník",matches:3,goals:0,assists:1,clean:0,reds:0},
+
+  {name:"Joao Pedro",team:"Brazílie",position:"Útočník",matches:3,goals:3,assists:0,clean:0,reds:0},
+  {name:"Raphinha",team:"Brazílie",position:"Útočník",matches:3,goals:2,assists:2,clean:0,reds:0},
+  {name:"Vinicius Jr.",team:"Brazílie",position:"Útočník",matches:3,goals:1,assists:0,clean:0,reds:0},
+  {name:"Endrick",team:"Brazílie",position:"Útočník",matches:1,goals:1,assists:0,clean:0,reds:0},
+  {name:"Rayan",team:"Brazílie",position:"Útočník",matches:1,goals:0,assists:1,clean:0,reds:0},
+  {name:"Gabriel Martinelli",team:"Brazílie",position:"Útočník",matches:1,goals:1,assists:0,clean:0,reds:0},
+  {name:"Bruno Guimaraes",team:"Brazílie",position:"Záložník",matches:3,goals:1,assists:2,clean:0,reds:0},
+  {name:"Lucas Paquetá",team:"Brazílie",position:"Záložník",matches:3,goals:0,assists:2,clean:0,reds:0},
+  {name:"Ederson",team:"Brazílie",position:"Záložník",matches:4,goals:0,assists:0,clean:1,reds:0},
+
+  {name:"Achraf Hakimi",team:"Maroko",position:"Obránce",matches:4,goals:1,assists:2,clean:0,reds:0},
+  {name:"Brahim Díaz",team:"Maroko",position:"Útočník",matches:4,goals:2,assists:2,clean:0,reds:0},
+  {name:"Chadi Riad",team:"Maroko",position:"Obránce",matches:3,goals:0,assists:0,clean:0,reds:1},
+  {name:"Noussair Mazraoui",team:"Maroko",position:"Obránce",matches:4,goals:0,assists:1,clean:0,reds:0},
+  {name:"Youssef En Nesyri",team:"Maroko",position:"Útočník",matches:4,goals:2,assists:0,clean:0,reds:0},
+  {name:"Ayoub El Kaabi",team:"Maroko",position:"Útočník",matches:4,goals:1,assists:0,clean:0,reds:0},
+  {name:"Ismael Saibari",team:"Maroko",position:"Záložník",matches:4,goals:1,assists:1,clean:0,reds:0},
+  {name:"Bilal El Khanouss",team:"Maroko",position:"Záložník",matches:4,goals:0,assists:1,clean:0,reds:0},
+  {name:"Sofian Amrabat",team:"Maroko",position:"Záložník",matches:4,goals:0,assists:1,clean:0,reds:0},
+  {name:"Yassine Bounou",team:"Maroko",position:"Brankář",matches:4,goals:0,assists:0,clean:1,reds:0},
+
+  {name:"Scott McTominay",team:"Skotsko",position:"Záložník",matches:3,goals:1,assists:2,clean:0,reds:0},
+  {name:"Lewis Ferguson",team:"Skotsko",position:"Záložník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"John McGinn",team:"Skotsko",position:"Záložník",matches:3,goals:1,assists:0,clean:0,reds:0},
+  {name:"Ché Adams",team:"Skotsko",position:"Útočník",matches:3,goals:1,assists:1,clean:0,reds:0},
+  {name:"Angus Gunn",team:"Skotsko",position:"Brankář",matches:3,goals:0,assists:0,clean:1,reds:0},
+
+  {name:"Alexandre Pierre",team:"Haiti",position:"Brankář",matches:1,goals:0,assists:0,clean:1,reds:0},
+
+  {name:"Manuel Neuer",team:"Německo",position:"Brankář",matches:3,goals:0,assists:0,clean:2,reds:0},
+  {name:"Oliver Baumann",team:"Německo",position:"Brankář",matches:1,goals:0,assists:0,clean:1,reds:0},
+  {name:"Deniz Undav",team:"Německo",position:"Útočník",matches:4,goals:5,assists:0,clean:0,reds:0},
+  {name:"Leroy Sané",team:"Německo",position:"Útočník",matches:1,goals:1,assists:0,clean:0,reds:0},
+  {name:"Florian Wirtz",team:"Německo",position:"Záložník",matches:3,goals:2,assists:1,clean:0,reds:0},
+  {name:"Jamal Musiala",team:"Německo",position:"Záložník",matches:3,goals:0,assists:3,clean:0,reds:0},
+  {name:"Nadiem Amiri",team:"Německo",position:"Záložník",matches:1,goals:0,assists:1,clean:0,reds:0},
+  {name:"Joshua Kimmich",team:"Německo",position:"Záložník",matches:3,goals:1,assists:1,clean:0,reds:0},
+  {name:"Karim Adeyemi",team:"Německo",position:"Útočník",matches:3,goals:0,assists:2,clean:0,reds:0},
+  {name:"Kai Havertz",team:"Německo",position:"Útočník",matches:1,goals:1,assists:0,clean:0,reds:0},
+  {name:"Aleksandar Pavlovic",team:"Německo",position:"Záložník",matches:3,goals:0,assists:2,clean:0,reds:0},
+
+  {name:"Willian Pacho",team:"Ekvádor",position:"Obránce",matches:2,goals:1,assists:0,clean:0,reds:0},
+  {name:"John Yeboah",team:"Ekvádor",position:"Útočník",matches:2,goals:1,assists:1,clean:0,reds:0},
+  {name:"Jeremy Arévalo",team:"Ekvádor",position:"Útočník",matches:2,goals:1,assists:0,clean:0,reds:0},
+  {name:"Kendry Páez",team:"Ekvádor",position:"Záložník",matches:2,goals:0,assists:1,clean:0,reds:0},
+  {name:"Denil Castillo",team:"Ekvádor",position:"Záložník",matches:2,goals:0,assists:1,clean:0,reds:0},
+  {name:"Moisés Caicedo",team:"Ekvádor",position:"Záložník",matches:2,goals:1,assists:1,clean:0,reds:0},
+
+  {name:"Richairo Zivkovic",team:"Curacao",position:"Útočník",matches:2,goals:1,assists:0,clean:0,reds:0},
+  {name:"Sontje Hansen",team:"Curacao",position:"Útočník",matches:2,goals:0,assists:1,clean:0,reds:0},
+  {name:"Eloy Room",team:"Curacao",position:"Brankář",matches:3,goals:0,assists:0,clean:1,reds:0},
+
+  {name:"Nicolas Pepe",team:"Pobřeží Slonoviny",position:"Útočník",matches:1,goals:1,assists:0,clean:0,reds:0},
+  {name:"Ange-Yoan Bonny",team:"Pobřeží Slonoviny",position:"Útočník",matches:2,goals:1,assists:0,clean:0,reds:0},
+  {name:"Wilfried Zaha",team:"Pobřeží Slonoviny",position:"Útočník",matches:2,goals:0,assists:1,clean:0,reds:0},
+  {name:"Yan Diomande",team:"Pobřeží Slonoviny",position:"Útočník",matches:2,goals:1,assists:0,clean:0,reds:0},
+  {name:"Eric Bailly",team:"Pobřeží Slonoviny",position:"Obránce",matches:1,goals:0,assists:1,clean:0,reds:0},
+  {name:"Ibrahim Sangaré",team:"Pobřeží Slonoviny",position:"Záložník",matches:1,goals:0,assists:1,clean:0,reds:0},
+  {name:"Bazoumana Touré",team:"Pobřeží Slonoviny",position:"Útočník",matches:1,goals:0,assists:1,clean:0,reds:0},
+  {name:"Yahia Fofana",team:"Pobřeží Slonoviny",position:"Brankář",matches:3,goals:0,assists:0,clean:1,reds:0},
+
+  {name:"Ayase Ueda",team:"Japonsko",position:"Útočník",matches:5,goals:5,assists:0,clean:0,reds:0},
+  {name:"Takefusa Kubo",team:"Japonsko",position:"Útočník",matches:3,goals:1,assists:1,clean:0,reds:0},
+  {name:"Keito Nakamura",team:"Japonsko",position:"Útočník",matches:1,goals:0,assists:1,clean:0,reds:0},
+  {name:"Wataru Endo",team:"Japonsko",position:"Záložník",matches:4,goals:0,assists:4,clean:0,reds:0},
+  {name:"Ritsu Doan",team:"Japonsko",position:"Záložník",matches:4,goals:1,assists:2,clean:0,reds:0},
+  {name:"Kaoru Mitoma",team:"Japonsko",position:"Záložník",matches:4,goals:2,assists:0,clean:0,reds:0},
+  {name:"Daichi Kamada",team:"Japonsko",position:"Záložník",matches:2,goals:0,assists:1,clean:0,reds:0},
+  {name:"Hidemasa Morita",team:"Japonsko",position:"Záložník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Takehiro Tomiyasu",team:"Japonsko",position:"Obránce",matches:5,goals:1,assists:0,clean:0,reds:0},
+  {name:"Zion Suzuki",team:"Japonsko",position:"Brankář",matches:5,goals:0,assists:0,clean:1,reds:0},
+
+  {name:"Cody Gakpo",team:"Nizozemsko",position:"Útočník",matches:3,goals:2,assists:1,clean:0,reds:0},
+  {name:"Memphis Depay",team:"Nizozemsko",position:"Útočník",matches:3,goals:3,assists:0,clean:0,reds:0},
+  {name:"Justin Kluivert",team:"Nizozemsko",position:"Útočník",matches:3,goals:1,assists:0,clean:0,reds:0},
+  {name:"Noa Lang",team:"Nizozemsko",position:"Útočník",matches:1,goals:0,assists:1,clean:0,reds:0},
+  {name:"Frenkie De Jong",team:"Nizozemsko",position:"Záložník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Teun Koopmeiners",team:"Nizozemsko",position:"Záložník",matches:2,goals:0,assists:1,clean:0,reds:0},
+  {name:"Jeremie Frimping",team:"Nizozemsko",position:"Obránce",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Bart Verbruggen",team:"Nizozemsko",position:"Brankář",matches:3,goals:0,assists:0,clean:2,reds:0},
+
+  {name:"Alexander Isak",team:"Švédsko",position:"Útočník",matches:3,goals:3,assists:0,clean:0,reds:0},
+  {name:"Dejan Kulusevski",team:"Švédsko",position:"Útočník",matches:3,goals:1,assists:1,clean:0,reds:0},
+  {name:"Lucas Bergvall",team:"Švédsko",position:"Záložník",matches:3,goals:0,assists:2,clean:0,reds:0},
+  {name:"Anthony Elanga",team:"Švédsko",position:"Útočník",matches:3,goals:0,assists:1,clean:0,reds:0},
+
+  {name:"Elias Achouri",team:"Tunisko",position:"Útočník",matches:1,goals:1,assists:0,clean:0,reds:0},
+  {name:"Ellyes Skhiri",team:"Tunisko",position:"Záložník",matches:1,goals:0,assists:1,clean:0,reds:0},
+
+  {name:"Kevin De Bruyne",team:"Belgie",position:"Záložník",matches:5,goals:1,assists:7,clean:0,reds:0},
+  {name:"Youri Tielemans",team:"Belgie",position:"Záložník",matches:5,goals:0,assists:3,clean:0,reds:0},
+  {name:"Amadou Onana",team:"Belgie",position:"Záložník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Leandro Trossard",team:"Belgie",position:"Útočník",matches:5,goals:4,assists:0,clean:0,reds:0},
+  {name:"Lois Openda",team:"Belgie",position:"Útočník",matches:5,goals:5,assists:0,clean:0,reds:0},
+  {name:"Alexis Saelemaekers",team:"Belgie",position:"Útočník",matches:5,goals:1,assists:1,clean:0,reds:0},
+  {name:"Joaquin Seys",team:"Belgie",position:"Útočník",matches:5,goals:1,assists:0,clean:0,reds:0},
+  {name:"Thibaut Courtois",team:"Belgie",position:"Brankář",matches:5,goals:0,assists:0,clean:2,reds:0},
+
+  {name:"Mehdi Taremi",team:"Írán",position:"Útočník",matches:3,goals:3,assists:0,clean:0,reds:0},
+  {name:"Sardar Azmoun",team:"Írán",position:"Útočník",matches:3,goals:2,assists:1,clean:0,reds:0},
+  {name:"Ahmad Nourollahi",team:"Írán",position:"Záložník",matches:1,goals:0,assists:1,clean:0,reds:0},
+  {name:"Abbas Habibi",team:"Írán",position:"Záložník",matches:2,goals:0,assists:1,clean:0,reds:0},
+  {name:"Arya Yousefi",team:"Írán",position:"Obránce",matches:3,goals:0,assists:1,clean:0,reds:0},
+
+  {name:"Elijah Just",team:"Nový Zéland",position:"Útočník",matches:3,goals:1,assists:0,clean:0,reds:0},
+  {name:"Chris Wood",team:"Nový Zéland",position:"Útočník",matches:3,goals:2,assists:0,clean:0,reds:0},
+  {name:"Marko Stamenic",team:"Nový Zéland",position:"Záložník",matches:3,goals:1,assists:0,clean:0,reds:0},
+  {name:"Joe Bell",team:"Nový Zéland",position:"Záložník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Sarpreet Singh",team:"Nový Zéland",position:"Záložník",matches:3,goals:0,assists:2,clean:0,reds:0},
+  {name:"Liberato Cacace",team:"Nový Zéland",position:"Obránce",matches:3,goals:0,assists:2,clean:0,reds:0},
+  {name:"Nando Pijnaker",team:"Nový Zéland",position:"Obránce",matches:3,goals:1,assists:0,clean:0,reds:0},
+
+  {name:"Mohamed Salah",team:"Egypt",position:"Útočník",matches:3,goals:1,assists:1,clean:0,reds:0},
+  {name:"Omar Marmoush",team:"Egypt",position:"Útočník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Mostafa Mohamed",team:"Egypt",position:"Útočník",matches:3,goals:1,assists:0,clean:0,reds:0},
+  {name:"Oufa Shobeir",team:"Egypt",position:"Brankář",matches:3,goals:0,assists:0,clean:1,reds:0},
+
+  {name:"Mikel Oyarzabal",team:"Španělsko",position:"Útočník",matches:4,goals:3,assists:0,clean:0,reds:0},
+  {name:"Lamine Yamal",team:"Španělsko",position:"Útočník",matches:4,goals:2,assists:0,clean:0,reds:0},
+  {name:"Nico Willuams",team:"Španělsko",position:"Útočník",matches:4,goals:0,assists:2,clean:0,reds:0},
+  {name:"Mikel Merino",team:"Španělsko",position:"Záložník",matches:4,goals:1,assists:0,clean:0,reds:0},
+  {name:"Pedri",team:"Španělsko",position:"Záložník",matches:4,goals:0,assists:1,clean:0,reds:0},
+  {name:"Rodri",team:"Španělsko",position:"Záložník",matches:4,goals:0,assists:2,clean:0,reds:0},
+  {name:"Ferran Torres",team:"Španělsko",position:"Útočník",matches:4,goals:0,assists:1,clean:0,reds:0},
+  {name:"Unai Simón",team:"Španělsko",position:"Brankář",matches:4,goals:0,assists:0,clean:2,reds:0},
+
+  {name:"Gustavo Varela",team:"Kapverdy",position:"Útočník",matches:3,goals:1,assists:1,clean:0,reds:0},
+  {name:"Duk",team:"Kapverdy",position:"Útočník",matches:3,goals:2,assists:0,clean:0,reds:0},
+  {name:"Leandro Andrade",team:"Kapverdy",position:"Útočník",matches:3,goals:0,assists:2,clean:0,reds:0},
+  {name:"Bruno Varela",team:"Kapverdy",position:"Útočník",matches:3,goals:0,assists:0,clean:1,reds:0},
+
+  {name:"Federico Valverde",team:"Uruguay",position:"Záložník",matches:5,goals:4,assists:5,clean:0,reds:0},
+  {name:"Darwin Nunez",team:"Uruguay",position:"Útočník",matches:5,goals:4,assists:1,clean:0,reds:0},
+  {name:"Luis Suárez",team:"Uruguay",position:"Útočník",matches:5,goals:6,assists:1,clean:0,reds:0},
+  {name:"Facundo Torres",team:"Uruguay",position:"Útočník",matches:5,goals:1,assists:0,clean:0,reds:0},
+  {name:"Santiago Bueno",team:"Uruguay",position:"Obránce",matches:5,goals:1,assists:0,clean:0,reds:0},
+  {name:"José Giménez",team:"Uruguay",position:"Obránce",matches:5,goals:0,assists:1,clean:0,reds:0},
+  {name:"Ronald Araujo",team:"Uruguay",position:"Obránce",matches:5,goals:0,assists:1,clean:0,reds:0},
+  {name:"Manuel Ugarte",team:"Uruguay",position:"Záložník",matches:5,goals:0,assists:2,clean:0,reds:0},
+  {name:"Rodrigo Bentancur",team:"Uruguay",position:"Záložník",matches:5,goals:0,assists:2,clean:0,reds:0},
+  {name:"Sergio Rochet",team:"Uruguay",position:"Brankář",matches:5,goals:0,assists:0,clean:2,reds:0},
+
+  {name:"Kylian Mbappé",team:"Francie",position:"Útočník",matches:5,goals:3,assists:0,clean:0,reds:0},
+  {name:"Ousmane Dembelé",team:"Francie",position:"Útočník",matches:5,goals:1,assists:3,clean:0,reds:0},
+  {name:"Michael Olise",team:"Francie",position:"Útočník",matches:5,goals:1,assists:0,clean:0,reds:0},
+  {name:"Rayan Cherki",team:"Francie",position:"Záložník",matches:5,goals:0,assists:1,clean:0,reds:0},
+  {name:"N'golo Kanté",team:"Francie",position:"Záložník",matches:1,goals:0,assists:1,clean:0,reds:0},
+  {name:"Dayot Upamecano",team:"Francie",position:"Obránce",matches:5,goals:0,assists:1,clean:0,reds:0},
+  {name:"Mike Maignan",team:"Francie",position:"Brankář",matches:5,goals:0,assists:0,clean:1,reds:0},
+
+  {name:"Sadio Mané",team:"Senegal",position:"Útočník",matches:3,goals:1,assists:1,clean:0,reds:0},
+  {name:"Nicolas Jackson",team:"Senegal",position:"Útočník",matches:3,goals:1,assists:0,clean:0,reds:0},
+  {name:"Ismaila Sarr",team:"Senegal",position:"Útočník",matches:3,goals:1,assists:1,clean:0,reds:0},
+  {name:"Iliman Ndiaye",team:"Senegal",position:"Útočník",matches:3,goals:0,assists:1,clean:0,reds:0},
+
+  {name:"Ali Al-Hamadi",team:"Irák",position:"Útočník",matches:3,goals:3,assists:1,clean:0,reds:0},
+  {name:"Marko Farji",team:"Irák",position:"Útočník",matches:3,goals:0,assists:2,clean:0,reds:0},
+  {name:"Ahmed Qasem",team:"Irák",position:"Útočník",matches:3,goals:1,assists:2,clean:0,reds:0},
+  {name:"Mohanad Ali",team:"Irák",position:"Útočník",matches:3,goals:1,assists:0,clean:0,reds:0},
+  {name:"Kevin Yakob",team:"Irák",position:"Záložník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Merchas Doski",team:"Irák",position:"Obránce",matches:3,goals:1,assists:0,clean:0,reds:0},
+
+  {name:"Erling Haaland",team:"Norsko",position:"Útočník",matches:5,goals:8,assists:0,clean:0,reds:0},
+  {name:"Martin Ødegaard",team:"Norsko",position:"Záložník",matches:5,goals:0,assists:5,clean:0,reds:0},
+  {name:"Alexander Sørloth",team:"Norsko",position:"Útočník",matches:5,goals:3,assists:0,clean:0,reds:0},
+  {name:"Morten Thorsby",team:"Norsko",position:"Útočník",matches:5,goals:0,assists:1,clean:0,reds:0},
+  {name:"Sander Berge",team:"Norsko",position:"Útočník",matches:5,goals:0,assists:1,clean:0,reds:0},
+  {name:"Antonio Nusa",team:"Norsko",position:"Útočník",matches:5,goals:1,assists:4,clean:0,reds:0},
+  {name:"Julian Ryerson",team:"Norsko",position:"Obránce",matches:5,goals:0,assists:1,clean:0,reds:0},
+  {name:"Ørjan Nyland",team:"Norsko",position:"Brankář",matches:5,goals:0,assists:0,clean:1,reds:0},
+
+  {name:"Lionel Messi",team:"Argentina",position:"Útočník",matches:3,goals:4,assists:2,clean:0,reds:0},
+  {name:"Julián Álvarez",team:"Argentina",position:"Útočník",matches:3,goals:1,assists:1,clean:0,reds:0},
+  {name:"Alejandro Garnacho",team:"Argentina",position:"Útočník",matches:1,goals:1,assists:0,clean:0,reds:0},
+  {name:"Paulo Dybala",team:"Argentina",position:"Útočník",matches:1,goals:1,assists:1,clean:0,reds:0},
+  {name:"Lautaro Martínez",team:"Argentina",position:"Útočník",matches:3,goals:2,assists:0,clean:0,reds:0},
+  {name:"Giuliano Simeone",team:"Argentina",position:"Útočník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Alexis Mac Allister",team:"Argentina",position:"Záložník",matches:1,goals:1,assists:0,clean:0,reds:0},
+  {name:"Nico Paz",team:"Argentina",position:"Záložník",matches:1,goals:0,assists:1,clean:0,reds:0},
+  {name:"Enzo Fernández",team:"Argentina",position:"Záložník",matches:3,goals:0,assists:2,clean:0,reds:0},
+  {name:"Gonzalo Montiel",team:"Argentina",position:"Obránce",matches:1,goals:0,assists:1,clean:0,reds:0},
+  {name:"Emiliano Martínez",team:"Argentina",position:"Brankář",matches:5,goals:0,assists:0,clean:3,reds:0},
+
+  {name:"Marko Arnautovič",team:"Rakousko",position:"Útočník",matches:4,goals:3,assists:0,clean:0,reds:0},
+  {name:"Marcel Sabitzer",team:"Rakousko",position:"Záložník",matches:4,goals:2,assists:3,clean:0,reds:0},
+  {name:"Patrick Wimmer",team:"Rakousko",position:"Záložník",matches:4,goals:0,assists:3,clean:0,reds:0},
+  {name:"Kevin Danso",team:"Rakousko",position:"Obránce",matches:4,goals:1,assists:0,clean:0,reds:0},
+  {name:"Alexander Schlager",team:"Rakousko",position:"Brankář",matches:4,goals:0,assists:0,clean:1,reds:0},
+
+  {name:"Riyad Mahrez",team:"Alžírsko",position:"Útočník",matches:3,goals:2,assists:0,clean:0,reds:0},
+  {name:"Fares Chaibi",team:"Alžírsko",position:"Záložník",matches:3,goals:0,assists:2,clean:0,reds:0},
+
+  {name:"Ibrahim Sabra",team:"Jordánsko",position:"Útočník",matches:3,goals:1,assists:0,clean:0,reds:0},
+  {name:"Mousa Tamari",team:"Jordánsko",position:"Útočník",matches:2,goals:0,assists:1,clean:0,reds:0},
+
+  {name:"Bruno Fernandes",team:"Portugalsko",position:"Záložník",matches:5,goals:3,assists:4,clean:0,reds:0},
+  {name:"Bernardo Silva",team:"Portugalsko",position:"Záložník",matches:5,goals:0,assists:1,clean:0,reds:0},
+  {name:"Joao Neves",team:"Portugalsko",position:"Záložník",matches:5,goals:0,assists:3,clean:0,reds:0},
+  {name:"Vitinha",team:"Portugalsko",position:"Záložník",matches:5,goals:1,assists:1,clean:0,reds:0},
+  {name:"Pedro Neto",team:"Portugalsko",position:"Útočník",matches:5,goals:1,assists:0,clean:0,reds:0},
+  {name:"Rafael Leão",team:"Portugalsko",position:"Útočník",matches:5,goals:2,assists:0,clean:0,reds:0},
+  {name:"Francisco Conceição",team:"Portugalsko",position:"Útočník",matches:5,goals:0,assists:2,clean:0,reds:0},
+  {name:"Cristiano Ronaldo",team:"Portugalsko",position:"Útočník",matches:5,goals:3,assists:0,clean:0,reds:0},
+  {name:"Diogo Costa",team:"Portugalsko",position:"Brankář",matches:5,goals:0,assists:0,clean:3,reds:0},
+
+  {name:"Cédric Bakambu",team:"DR Kongo",position:"Útočník",matches:3,goals:3,assists:0,clean:0,reds:0},
+  {name:"Yoane Wissa",team:"DR Kongo",position:"Útočník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Noah Sadiki",team:"DR Kongo",position:"Záložník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Ngal'ayel Mukau",team:"DR Kongo",position:"Záložník",matches:3,goals:0,assists:1,clean:0,reds:0},
+
+  {name:"Harry Kane",team:"Anglie",position:"Útočník",matches:3,goals:2,assists:0,clean:0,reds:0},
+  {name:"Bukayo Saka",team:"Anglie",position:"Útočník",matches:3,goals:1,assists:1,clean:0,reds:0},
+  {name:"Anthony Gordon",team:"Anglie",position:"Útočník",matches:3,goals:1,assists:1,clean:0,reds:0},
+  {name:"Declan Rice",team:"Anglie",position:"Záložník",matches:3,goals:1,assists:1,clean:0,reds:0},
+  {name:"Kobbie Mainoo",team:"Anglie",position:"Záložník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Morgan Rogers",team:"Anglie",position:"Záložník",matches:3,goals:1,assists:1,clean:0,reds:0},
+  {name:"Reece James",team:"Anglie",position:"Obránce",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Harry Maguire",team:"Anglie",position:"Obránce",matches:3,goals:1,assists:0,clean:0,reds:0},
+  {name:"Nico O'Reilly",team:"Anglie",position:"Obránce",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Jordan Pickford",team:"Anglie",position:"Brankář",matches:3,goals:0,assists:0,clean:2,reds:0},
+
+  {name:"Andrej Kramarič",team:"Chorvatsko",position:"Útočník",matches:5,goals:5,assists:0,clean:0,reds:0},
+  {name:"Ante Budimir",team:"Chorvatsko",position:"Útočník",matches:5,goals:3,assists:0,clean:0,reds:0},
+  {name:"Luka Modrič",team:"Chorvatsko",position:"Záložník",matches:5,goals:0,assists:5,clean:0,reds:0},
+  {name:"Martin Baturina",team:"Chorvatsko",position:"Záložník",matches:5,goals:3,assists:0,clean:0,reds:0},
+  {name:"Mateo Kovačič",team:"Chorvatsko",position:"Záložník",matches:5,goals:0,assists:3,clean:0,reds:0},
+  {name:"Toni Fruk",team:"Chorvatsko",position:"Záložník",matches:5,goals:1,assists:3,clean:0,reds:0},
+  {name:"Joško Gvardiol",team:"Chorvatsko",position:"Obránce",matches:5,goals:0,assists:1,clean:0,reds:0},
+  {name:"Dominik Livakovic",team:"Chorvatsko",position:"Brankář",matches:5,goals:0,assists:0,clean:5,reds:0},
+
+  {name:"Luis Díaz",team:"Kolumbie",position:"Útočník",matches:5,goals:4,assists:0,clean:0,reds:0},
+  {name:"Luis Suárez",team:"Kolumbie",position:"Útočník",matches:5,goals:1,assists:0,clean:0,reds:0},
+  {name:"Santiago Arias",team:"Kolumbie",position:"Obránce",matches:5,goals:0,assists:3,clean:0,reds:0},
+  {name:"James Rodríguez",team:"Kolumbie",position:"Záložník",matches:5,goals:1,assists:3,clean:0,reds:0},
+  {name:"Jhon Arias",team:"Kolumbie",position:"Útočník",matches:5,goals:0,assists:1,clean:0,reds:0},
+  {name:"Jhon Cordoba",team:"Kolumbie",position:"Útočník",matches:5,goals:1,assists:0,clean:0,reds:0},
+  {name:"Jefferson Lerma",team:"Kolumbie",position:"Záložník",matches:5,goals:1,assists:0,clean:0,reds:0},
+  {name:"Gustavo Puerta",team:"Kolumbie",position:"Záložník",matches:5,goals:0,assists:1,clean:0,reds:0},
+  {name:"Camilo Vargas",team:"Kolumbie",position:"Brankář",matches:5,goals:0,assists:0,clean:1,reds:0},
+
+  {name:"Eldor Shomurodov",team:"Uzbekistán",position:"Útočník",matches:3,goals:1,assists:0,clean:0,reds:0},
+  {name:"Oston Urunov",team:"Uzbekistán",position:"Útočník",matches:3,goals:1,assists:1,clean:0,reds:0},
+  {name:"Abdukodir Khusanov",team:"Uzbekistán",position:"Obránce",matches:3,goals:1,assists:0,clean:0,reds:0},
+  {name:"Odildzhon Khamrobekov",team:"Uzbekistán",position:"Záložník",matches:3,goals:0,assists:1,clean:0,reds:0},
+  {name:"Abduvokhid Nematov",team:"Uzbekistán",position:"Brankář",matches:3,goals:0,assists:1,clean:1,reds:0},
+
+  {name:"Antoine Semenyo",team:"Ghana",position:"Útočník",matches:4,goals:1,assists:0,clean:0,reds:0},
+  {name:"Inaki Williams",team:"Ghana",position:"Útočník",matches:4,goals:3,assists:1,clean:0,reds:0},
+  {name:"Thomas Partey",team:"Ghana",position:"Záložník",matches:4,goals:1,assists:0,clean:0,reds:0},
+  {name:"Osman Bukari",team:"Ghana",position:"Záložník",matches:4,goals:0,assists:1,clean:0,reds:0},
+  {name:"Ibrahim Sulemana",team:"Ghana",position:"Záložník",matches:4,goals:0,assists:1,clean:0,reds:0},
+  {name:"Lawrence Ati-Zigi",team:"Ghana",position:"Brankář",matches:4,goals:0,assists:0,clean:1,reds:0},
+
+  {name:"Abdulelah Al Amri",team:"Saúdská Arábie",position:"Obránce",matches:1,goals:0,assists:0,clean:0,reds:1},
+];
+
+
+const CATEGORY_SORT = { goals:"goals", assists:"assists", clean:"clean", reds:"reds" };
+
+let state = { category:"goals", team:"all", search:"", sortKey:"goals", sortDir:"desc" };
+
+const teamSelect = document.getElementById("teamFilter");
+const allOpt = document.createElement("option");
+allOpt.value = "all"; allOpt.textContent = "Všechny týmy";
+teamSelect.appendChild(allOpt);
+TEAMS.slice().sort((a,b)=>a.n.localeCompare(b.n,"cs"))
+  .forEach(t => {
+    const o = document.createElement("option");
+    o.value = t.n; o.textContent = t.f + "  " + t.n;
+    teamSelect.appendChild(o);
+  });
+
+document.querySelectorAll(".tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(b => {
+      b.classList.remove("active","cat-reds","cat-clean","cat-assists","cat-goals");
+    });
+    btn.classList.add("active", "cat-" + btn.dataset.cat);
+    state.category = btn.dataset.cat;
+    state.sortKey = CATEGORY_SORT[state.category];
+    state.sortDir = "desc";
+    render();
+  });
+});
+
+teamSelect.addEventListener("change", e => { state.team = e.target.value; render(); });
+document.getElementById("searchInput").addEventListener("input", e => {
+  state.search = e.target.value.toLowerCase().trim(); render();
+});
+
+document.querySelectorAll("#headerRow th").forEach(th => {
+  th.addEventListener("click", () => {
+    const key = th.dataset.key;
+    if (key === "rank") return;
+    if (state.sortKey === key) {
+      state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+    } else {
+      state.sortKey = key;
+      state.sortDir = ["name","team","position"].includes(key) ? "asc" : "desc";
+    }
+    render();
+  });
+});
+
+function posClass(p) {
+  return "pos-" + p.toLowerCase()
+    .replace(/á/g,"a").replace(/í/g,"i").replace(/ř/g,"r")
+    .replace(/š/g,"s").replace(/č/g,"c").replace(/ě/g,"e")
+    .replace(/ů/g,"u").replace(/ú/g,"u").replace(/ý/g,"y")
+    .replace(/ž/g,"z").replace(/ň/g,"n").replace(/ť/g,"t");
+}
+
+function render() {
+  const catKey = CATEGORY_SORT[state.category];
+  let rows = PLAYERS.filter(p => p[catKey] > 0);
+  if (state.team !== "all") rows = rows.filter(p => p.team === state.team);
+  if (state.search) rows = rows.filter(p => p.name.toLowerCase().includes(state.search));
+
+  rows.sort((a,b) => {
+    const k = state.sortKey;
+    let av = a[k], bv = b[k];
+    if (typeof av === "string") {
+      return state.sortDir === "asc" ? av.localeCompare(bv,"cs") : bv.localeCompare(av,"cs");
+    }
+    return state.sortDir === "asc" ? av - bv : bv - av;
+  });
+
+  document.querySelectorAll("#headerRow th").forEach(th => {
+    th.classList.remove("sorted");
+    const arrow = th.querySelector(".arrow");
+    if (th.dataset.key === state.sortKey) {
+      th.classList.add("sorted");
+      arrow.textContent = state.sortDir === "asc" ? "▲" : "▼";
+    } else arrow.textContent = "↕";
+  });
+
+  const tbody = document.getElementById("tableBody");
+  tbody.innerHTML = "";
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" class="empty">Žádní hráči neodpovídají zvoleným filtrům.</td></tr>`;
+    return;
+  }
+  const hl = state.sortKey;
+  rows.forEach((p, i) => {
+    const tr = document.createElement("tr");
+    const cells = [
+      { v: i+1, cls: "rank" },
+      { v: p.name, cls: "player-name", k: "name" },
+      { v: `<span class="team"><span class="flag">${FLAG[p.team]||"🏳️"}</span> ${p.team}</span>`, k: "team" },
+      { v: `<span class="pos-badge ${posClass(p.position)}">${p.position}</span>`, k: "position" },
+      { v: p.matches, k: "matches" },
+      { v: p.goals, k: "goals" },
+      { v: p.assists, k: "assists" },
+      { v: p.clean, k: "clean" },
+      { v: p.reds, k: "reds" }
+    ];
+    tr.innerHTML = cells.map(c => {
+      const cls = [c.cls || "", c.k === hl ? "stat-highlight" : ""].filter(Boolean).join(" ");
+      return `<td class="${cls}">${c.v}</td>`;
+    }).join("");
+    tbody.appendChild(tr);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
